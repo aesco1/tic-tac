@@ -5,8 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tic-Tac-Toe Game</title>
     <script src="script.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    
+    <header></header>
+    <div class="main">
+        <h1>Tic-Tac-Toe</h1>
+        <div class="game-input-area"></div>
+                <div class="game-board">
+                    <button class="cell"></button>
+                    <button class="cell"></button>
+                    <button class="cell"></button>
+                    <button class="cell"></button>
+                    <button class="cell"></button>
+                    <button class="cell"></button>
+                    <button class="cell"></button>
+                    <button class="cell"></button>
+                    <button class="cell"></button>
+                </div>
+                <div class="user-input-area">
+                    <div class="player1-area">
+                        <label for="username">Enter Name For Player 1</label>
+                        <input type="text" id="player-1-input" name="username" placeholder="Enter username">
+                    </div>
+
+                    <div class="player2-area">
+                        <label for="username">Enter Name For Player 2</label>
+                        <input type="text" id="player-2-input" name="username" placeholder="Enter username">
+                    </div>
+                    <button type="submit" id="submitButton">Start Game</button>
+                </div>
+            </div>
+    </div>
+    <footer></footer>
 </body>
 </html>

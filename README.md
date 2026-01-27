@@ -10,7 +10,6 @@ Then function that handles user clicks and handles them in array (should have ch
 Add input for names, start/stop button, then display game results
 
 How to check for win? check for 3 consecutive horizontal, diagonal, and vertical (maybe dont run check until 2nd play)
-keep a need to win array for each player to make check quick. 
 
 const lines = [
   // rows
