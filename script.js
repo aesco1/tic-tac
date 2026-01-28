@@ -2,8 +2,7 @@ console.log("Hello")
 
 // Game Logic
 const gameBoard = (function(){
-    const gameArray = Array(9).fill('')
-
+    let gameArray = Array(9).fill('')
     function playRound(postion, symbol){
         gameArray[postion] = symbol;
         const winningSymbol = winConCheck();
@@ -12,36 +11,38 @@ const gameBoard = (function(){
 
     function winConCheck(){
         const lines = [
-        // rows
-        [gameArray[0], gameArray[1], gameArray[2]],
-        [gameArray[3], gameArray[4], gameArray[5]],
-        [gameArray[6], gameArray[7], gameArray[8]],
-        // columns
-        [gameArray[0], gameArray[3], gameArray[6]],
-        [gameArray[1], gameArray[4], gameArray[7]],
-        [gameArray[2], gameArray[5], gameArray[8]],
-        // diagonals
-        [gameArray[0], gameArray[4], gameArray[8]],
-        [gameArray[6], gameArray[4], gameArray[2]],
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 8],
+        [0, 3, 6],
+        [1, 4, 7],
+        [2, 5, 8],
+        [0, 4, 8],
+        [6, 4, 2],
         ];
 
         for (const [a, b, c] of lines){
-            if (a && a === b && b === c){
-                return a
+            if (gameArray[a] && gameArray[a] === gameArray[b] && gameArray[b] === gameArray[c]){
+                return { symbol: gameArray[a], cells: [a, b, c] };
             }
         }
-        return false
+        return false;
     }
 
+    function clearArray(){
+        gameArray = Array(9).fill('');
+    }
 
-    return {playRound, gameArray}
+    return {playRound, gameArray, clearArray}
 })();
 
 // Handles Game Flow
 const gameController = (function(){
     let playerTurn = 0  //start on player 1s turn
     let turnCount = 0
+    gameOver = 0
     let players = [];
+    let initialized = false;
 
     function createPlayers(player1, player2){
         players = [player1, player2];
@@ -49,6 +50,10 @@ const gameController = (function(){
     }
 
    function handleMove(index){
+        if (gameOver){
+            return
+        }
+
         if (turnCount === 8){
             displayController.announceTie();
         }
@@ -58,6 +63,7 @@ const gameController = (function(){
         displayController.updateCell(index, marker);
 
         if (winner){
+            gameOver = 1;
             displayController.announceWinner(winner);
         } else {
             playerTurn = (playerTurn + 1) % 2
@@ -69,11 +75,27 @@ const gameController = (function(){
     function startGame(player1, player2){
         createPlayers(player1,player2);
         console.log(`${player1} vs. ${player2}`)
-        displayController.init(handleMove);
-        displayController.initStart();
+
+        if (!initialized){
+            displayController.init(handleMove);
+            displayController.initReset();
+            initialized = true;
+        }
     }
 
-    return {startGame, handleMove}
+    function getPlayers(){
+        return players;
+    }
+
+    function handleReset(){
+        playerTurn = 0;
+        gameOver = 0;
+        turnCount = 0;
+        gameBoard.clearArray();
+        displayController.cleanUpForReset();
+    }
+
+    return {startGame, handleMove, getPlayers, handleReset}
 })();
 
 // handles UI
@@ -91,28 +113,44 @@ const displayController = (function(){
     function initStart(){
         const submitButton = document.getElementById('submitButton');
         submitButton.addEventListener('click', () => {
-            
+
+            const announcementZone = document.getElementById('announcement-zone');
+           
             //Init Game with player names
             player1Name = document.getElementById('player-1-input').value;
+            player1Name = player1Name.charAt(0).toUpperCase() + player1Name.slice(1);
+
             player2Name = document.getElementById('player-2-input').value
+            player2Name = player2Name.charAt(0).toUpperCase() + player2Name.slice(1);
+
             gameController.startGame(player1Name, player2Name);
 
-            // Changes button/input area to an announcement area
-            const announcementZone = document.createElement('h1');
-            announcementZone.classList.add('announcment-zone');
+            document.querySelector('.user-input-area').classList.add('hidden');
+        
+            announcementZone.classList.remove('hidden');
+            document.getElementById('reset-button').classList.remove('hidden')
 
-            const playerInfoAndStart = document.querySelector('.user-input-area');
-            
-            player1Name = player1Name.charAt(0).toUpperCase() + player1Name.slice(1);
             announcementZone.textContent = `${player1Name}'s Turn`;
-
-            playerInfoAndStart.replaceChildren(announcementZone);
         })
+    }
+
+    function initReset(){
+        const resetButton = document.getElementById('reset-button');
+        resetButton.addEventListener('click', () => {
+            gameController.handleReset();
+        });
     }
 
     //update CurrentPlayer
     function announcePlayerChange(playerTurn){
+        const announcementZone = document.getElementById('announcement-zone');
+        playerArray = gameController.getPlayers();
 
+        if (playerTurn === 0){
+            announcementZone.textContent = `${playerArray[0]}'s Turn`;
+        }else{
+            announcementZone.textContent = `${playerArray[1]}'s Turn`;
+        }
     }
 
     // update display marker
@@ -122,15 +160,41 @@ const displayController = (function(){
     }
 
     function announceWinner(winner){
-        //manip dom element to show winner or tie (tie happens when)
+        const announcementZone = document.getElementById('announcement-zone');
+        playerArray = gameController.getPlayers();
+
+        if (winner.symbol === '✖️'){
+            announcementZone.textContent = `Winner is ${playerArray[0]}`;
+        } else{
+            announcementZone.textContent = `Winner is ${playerArray[1]}`;
+        }
+
+        //highlight winning cells
+        const cellList = document.querySelectorAll('.cell');
+        winner.cells.forEach(index => {
+            cellList[index].classList.add('winner');
+        });
     }
 
     function announceTie(){
         console.log("Tie Game");
     }
 
+
+    function cleanUpForReset(){
+        const cells = document.querySelectorAll('.cell');
+        cells.forEach((cell) => {
+            cell.textContent = '';
+            cell.classList.remove('winner');
+        });
+
+        document.querySelector('.user-input-area').classList.remove('hidden');
+        document.getElementById('announcement-zone').classList.add('hidden');
+        document.getElementById('reset-button').classList.add('hidden');
+    }
+
     document.addEventListener('DOMContentLoaded', initStart);
 
-    return {init, updateCell, announceWinner, initStart, announcePlayerChange, announceTie} 
+    return {init, updateCell, announceWinner, initStart, announcePlayerChange, announceTie, initReset, cleanUpForReset} 
 })();
 
